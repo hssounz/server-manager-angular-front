@@ -8,7 +8,12 @@ export interface CustomResponse {
     message: string
     developerMessage: string
     data: {
-        servers?: Server[],
+        servers?: {
+            currentPage: number,
+            pageSize: number
+            totalPages: number
+            servers: Server[]
+        },
         server?: Server
     }
 }

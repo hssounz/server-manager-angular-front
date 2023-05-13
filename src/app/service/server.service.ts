@@ -53,7 +53,7 @@ export class ServerService {
             ? { ...response, message: `Servers filtered by ${status} status` }
             : {
               ...response,
-              message: response.data.servers?.filter(
+              message: response.data.servers?.servers?.filter(
                 server => server.status === status
               ).length > 0
                 ? `Servers filtered by ${status === ServerStatus.SERVER_DOWN
@@ -62,9 +62,13 @@ export class ServerService {
                 } status`
                 : `No server for: ${status} status`,
               data: {
-                servers: response.data.servers?.filter(
-                  server => server.status === status
-                )
+                
+                servers: {
+                  ...response.data.servers,
+                  servers: response.data.servers.servers?.filter(
+                    server => server.status === status
+                  )
+                }
               }
             }
         );
