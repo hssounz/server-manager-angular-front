@@ -7,6 +7,7 @@ import { DataState } from './enum/data-state-enum';
 import { Server } from './interface/server';
 import { ServerStatus } from './enum/server-status.enum';
 import { NgForm } from '@angular/forms';
+import { NotifierService } from 'angular-notifier';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { NgForm } from '@angular/forms';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
+  private readonly notifier: NotifierService;
   appState$: Observable<AppState<CustomResponse>>;
   readonly DataState = DataState;
   readonly ServerStatus = ServerStatus;
@@ -25,7 +27,9 @@ export class AppComponent implements OnInit {
 
 
 
-  constructor(private serverService: ServerService) { }
+  constructor(private serverService: ServerService, notifierService: NotifierService) {
+    this.notifier = notifierService;
+   }
 
   ngOnInit(): void {
     this.appState$ = this.serverService.servers$.pipe(
@@ -57,6 +61,7 @@ export class AppComponent implements OnInit {
             server => server.id === response.data.server.id
           )
         ] = response.data.server;
+        this.notifier.notify(response.data.server.status == "SERVER_UP" ? 'success' : 'warning', response.message);
         this.filterSubject.next('');
         return {
           dataState: DataState.LOADED_STATE,
@@ -68,6 +73,7 @@ export class AppComponent implements OnInit {
         appData: this.dataSubject.value
       }),
       catchError((error: string) => {
+        this.notifier.notify('error', error);
         this.filterSubject.next('');
         return of({
           dataState: DataState.ERROR_STATE,
@@ -100,8 +106,6 @@ export class AppComponent implements OnInit {
   }
 
   saveServer(serverForm: NgForm): void {
-    console.log(serverForm.value);
-    console.log("test");
     this.isLoadingSubject.next(true);
     this.appState$ = this.serverService.save$(serverForm.value as Server).pipe(
       map(response => {
@@ -113,6 +117,7 @@ export class AppComponent implements OnInit {
             }
           }}
         );
+        this.notifier.notify('success', response.message);
         document.getElementById('closeModal').click();
         this.isLoadingSubject.next(false);
         serverForm.resetForm({status : this.ServerStatus.SERVER_DOWN});
@@ -126,6 +131,7 @@ export class AppComponent implements OnInit {
         appData: this.dataSubject.value
       }),
       catchError((error: string) => {
+        this.notifier.notify('error', error);
         this.isLoadingSubject.next(false);
         return of({
           dataState: DataState.ERROR_STATE,
@@ -147,7 +153,8 @@ export class AppComponent implements OnInit {
               }
             }
           }
-        )
+        );
+        this.notifier.notify('success', response.message);
         return {
           dataState: DataState.LOADED_STATE,
           appData: this.dataSubject.value
@@ -158,6 +165,7 @@ export class AppComponent implements OnInit {
         appData: this.dataSubject.value
       }),
       catchError((error: string) => {
+        this.notifier.notify('error', error);
         return of({
           dataState: DataState.ERROR_STATE,
           error
@@ -167,16 +175,17 @@ export class AppComponent implements OnInit {
   }
 
   printReport(): void{
-    window.print();
-    // let dataType= 'application/vnd.ms-excel.sheet.marcoEnabled.12'
-    // let tableSelect = document.getElementById('servers');
-    // let tableHtml = tableSelect.outerHTML.replace(/ /g, '%20');
-    // let downloadLink = document.createElement('a');
-    // document.body.appendChild(downloadLink);
-    // downloadLink.href = 'data:' + dataType + ', ' + tableHtml;
-    // downloadLink.download = 'servers-report.xls';
-    // downloadLink.click();
-    // document.body.removeChild(downloadLink);
+    // window.print();
+    let dataType= 'application/vnd.ms-excel.sheet.marcoEnabled.12'
+    let tableSelect = document.getElementById('servers');
+    let tableHtml = tableSelect.outerHTML.replace(/ /g, '%20');
+    let downloadLink = document.createElement('a');
+    document.body.appendChild(downloadLink);
+    downloadLink.href = 'data:' + dataType + ', ' + tableHtml;
+    downloadLink.download = 'servers-report.xls';
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    this.notifier.notify('success', "File downloading successfuly");
   }
 
 }
