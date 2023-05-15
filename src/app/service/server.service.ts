@@ -38,7 +38,7 @@ export class ServerService {
     );
 
   delete$ = (id: string) => <Observable<CustomResponse>>this.http
-    .get<CustomResponse>(`${this.apiUrl}/delete/${id}`)
+    .delete<CustomResponse>(`${this.apiUrl}/delete/${id}`)
     .pipe(
       tap(console.log),
       catchError(this.handleError)
